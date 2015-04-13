@@ -1,0 +1,69 @@
+#!/usr/bin/python2
+
+import sys, re
+from getopt import getopt
+from phue import Bridge
+
+config = {}
+
+class Hue():
+    def __init__(self, bridge, on, lightbulb=None):
+        self.bridgeAddress = bridge
+        self.on = on
+
+        if lightbulb:
+            m = re.split('\s*,\s*', lightbulb)
+            self.lightbulbs = m if m else [lightbulb]
+
+    def connect(self):
+        self.bridge = Bridge(self.bridgeAddress)
+        self.bridge.connect()
+        self.bridge.get_api()
+
+        if not hasattr(self, 'lightbulbs'):
+            self.lightbulbs = []
+            for light in self.bridge.lights:
+                self.lightbulbs.append(light.name)
+
+    def do(self):
+        self.bridge.set_light(self.lightbulbs, 'on', self.on)
+
+def showHelp():
+    print "Usage: %s <-b|--bridge> bridge [-l|--lightbulb lighbulb] <--on|--off>\n" \
+        "  -b|--bridge\tIP address or hostname of the Philips Hue bridge\n" \
+        "  -l|--lightbulb\tLightbulbs to toggle, name or index, or comma separated list (default: all)\n" \
+        "  --on|--off\tSet the lights on or off\n" \
+        % (sys.argv[0])
+
+def initConfig():
+    optlist, args = getopt(sys.argv[1:], 'b:l:', ['bridge=', 'lightbulb=', 'on', 'off'])
+
+    for opt in optlist:
+        if opt[0] == '-b' or opt[0] == '--bridge':
+            config['bridge'] = opt[1]
+        elif opt[0] == '-l' or opt[0] == '--lightbulb':
+            config['lightbulb'] = opt[1]
+        elif opt[0] == '--on':
+            config['on'] = True
+        elif opt[0] == '--off':
+            config['on'] = False
+
+    if 'bridge' not in config:
+        showHelp()
+        sys.exit(1)
+
+    if 'on' not in config:
+        showHelp()
+        sys.exit(1)
+
+def main():
+    initConfig()
+
+    print "Initializing Philips Hue connection"
+    config['hue'] = Hue(bridge=config['bridge'], lightbulb = (config['lightbulb'] if 'lightbulb' in config else None), on = config['on'])
+    config['hue'].connect()
+    config['hue'].do()
+
+if __name__ == "__main__":
+    main()
+
