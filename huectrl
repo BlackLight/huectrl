@@ -7,9 +7,8 @@ from phue import Bridge
 config = {}
 
 class Hue():
-    def __init__(self, bridge, on, lightbulb=None):
+    def __init__(self, bridge, lightbulb=None):
         self.bridgeAddress = bridge
-        self.on = on
 
         if lightbulb:
             m = re.split('\s*,\s*', lightbulb)
@@ -25,18 +24,41 @@ class Hue():
             for light in self.bridge.lights:
                 self.lightbulbs.append(light.name)
 
-    def do(self):
-        self.bridge.set_light(self.lightbulbs, 'on', self.on)
+    def setOn(self, on):
+        for light in self.lightbulbs:
+            self.bridge.set_light(light, 'on', on)
+            if on:
+                self.bridge.set_light(light, 'bri', 255)
+
+    def setBri(self, bri):
+        if bri == 0:
+            for light in self.lightbulbs:
+                self.bridge.set_light(light, 'on', False)
+        else:
+            for light in self.lightbulbs:
+                if not self.bridge.get_light(light, 'on'):
+                    self.bridge.set_light(light, 'on', True)
+
+        self.bridge.set_light(self.lightbulbs, 'bri', bri)
+
+    def setSat(self, sat):
+        self.bridge.set_light(self.lightbulbs, 'sat', sat)
+
+    def setHue(self, hue):
+        self.bridge.set_light(self.lightbulbs, 'hue', hue)
 
 def showHelp():
-    print "Usage: %s <-b|--bridge> bridge [-l|--lightbulb lighbulb] <--on|--off>\n" \
+    print "Usage: %s <-b|--bridge> bridge [-l|--lightbulb lighbulb] [--on|--off] [--bri <brightness>] [--sat <saturation>] [--hue <hue>]\n" \
         "  -b|--bridge\tIP address or hostname of the Philips Hue bridge\n" \
         "  -l|--lightbulb\tLightbulbs to toggle, name or index, or comma separated list (default: all)\n" \
         "  --on|--off\tSet the lights on or off\n" \
+        "  --bri <brightness>\tSet the lights brightness [0-255]\n" \
+        "  --sat <saturation>\tSet the lights saturation [0-255]\n" \
+        "  --hue <hue>\tSet the lights hue [0-255]\n" \
         % (sys.argv[0])
 
 def initConfig():
-    optlist, args = getopt(sys.argv[1:], 'b:l:', ['bridge=', 'lightbulb=', 'on', 'off'])
+    optlist, args = getopt(sys.argv[1:], 'b:l:', ['bridge=', 'lightbulb=', 'on', 'off', 'bri=', 'hue=', 'sat='])
 
     for opt in optlist:
         if opt[0] == '-b' or opt[0] == '--bridge':
@@ -47,12 +69,22 @@ def initConfig():
             config['on'] = True
         elif opt[0] == '--off':
             config['on'] = False
+        elif opt[0] == '--bri':
+            config['bri'] = int(opt[1])
+        elif opt[0] == '--sat':
+            config['sat'] = int(opt[1])
+        elif opt[0] == '--hue':
+            config['hue'] = int(opt[1])
 
     if 'bridge' not in config:
         showHelp()
         sys.exit(1)
 
-    if 'on' not in config:
+    if \
+            'on'  not in config and \
+            'bri' not in config and \
+            'sat' not in config and \
+            'hue' not in config:
         showHelp()
         sys.exit(1)
 
@@ -60,9 +92,17 @@ def main():
     initConfig()
 
     print "Initializing Philips Hue connection"
-    config['hue'] = Hue(bridge=config['bridge'], lightbulb = (config['lightbulb'] if 'lightbulb' in config else None), on = config['on'])
-    config['hue'].connect()
-    config['hue'].do()
+    hue = Hue(bridge=config['bridge'], lightbulb = (config['lightbulb'] if 'lightbulb' in config else None))
+    hue.connect()
+
+    if 'on' in config:
+        hue.setOn(config['on'])
+    elif 'bri' in config:
+        hue.setBri(config['bri'])
+    elif 'sat' in config:
+        hue.setSat(config['sat'])
+    elif 'hue' in config:
+        hue.setSat(config['hue'])
 
 if __name__ == "__main__":
     main()

@@ -1,1 +1,9 @@
-# huectrl
+$ huectrl
+Usage: huectrl <-b|--bridge> bridge [-l|--lightbulb lighbulb] [--on|--off] [--bri <brightness>] [--sat <saturation>] [--hue <hue>]
+  -b|--bridge	IP address or hostname of the Philips Hue bridge
+  -l|--lightbulb	Lightbulbs to toggle, name or index, or comma separated list (default: all)
+  --on|--off	Set the lights on or off
+  --bri <brightness>	Set the lights brightness [0-255]
+  --sat <saturation>	Set the lights saturation [0-255]
+  --hue <hue>	Set the lights hue [0-255]
+
