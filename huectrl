@@ -97,11 +97,11 @@ def main():
 
     if 'on' in config:
         hue.setOn(config['on'])
-    elif 'bri' in config:
+    if 'bri' in config:
         hue.setBri(config['bri'])
-    elif 'sat' in config:
+    if 'sat' in config:
         hue.setSat(config['sat'])
-    elif 'hue' in config:
+    if 'hue' in config:
         hue.setSat(config['hue'])
 
 if __name__ == "__main__":
