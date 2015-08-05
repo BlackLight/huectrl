@@ -52,8 +52,8 @@ def showHelp():
         "  -b|--bridge\tIP address or hostname of the Philips Hue bridge\n" \
         "  -l|--lightbulb\tLightbulbs to toggle, name or index, or comma separated list (default: all)\n" \
         "  --on|--off\tSet the lights on or off\n" \
-        "  --bri <brightness>\tSet the lights brightness [0-500]\n" \
-        "  --sat <saturation>\tSet the lights saturation [0-65535]\n" \
+        "  --bri <brightness>\tSet the lights brightness [0-255]\n" \
+        "  --sat <saturation>\tSet the lights saturation [0-500]\n" \
         "  --hue <hue>\tSet the lights hue [0-65535]\n" \
         % (sys.argv[0])
 
