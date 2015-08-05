@@ -75,6 +75,9 @@ def initConfig():
             config['sat'] = int(opt[1])
         elif opt[0] == '--hue':
             config['hue'] = int(opt[1])
+        else:
+            showHelp()
+            sys.exit(1)
 
     if 'bridge' not in config:
         showHelp()
@@ -102,7 +105,7 @@ def main():
     if 'sat' in config:
         hue.setSat(config['sat'])
     if 'hue' in config:
-        hue.setSat(config['hue'])
+        hue.setHue(config['hue'])
 
 if __name__ == "__main__":
     main()
