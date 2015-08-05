@@ -94,7 +94,6 @@ def initConfig():
 def main():
     initConfig()
 
-    print "Initializing Philips Hue connection"
     hue = Hue(bridge=config['bridge'], lightbulb = (config['lightbulb'] if 'lightbulb' in config else None))
     hue.connect()
 
