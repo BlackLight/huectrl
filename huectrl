@@ -7,17 +7,33 @@ from phue import Bridge
 config = {}
 
 class Hue():
-    def __init__(self, bridge, lightbulb=None):
+    def __init__(self, bridge, lightbulb=None, group=None):
         self.bridgeAddress = bridge
 
         if lightbulb:
-            m = re.split('\s*,\s*', lightbulb)
-            self.lightbulbs = m if m else [lightbulb]
+            self.lightbulbs = re.split('\s*,\s*', lightbulb)
+
+        if group:
+            self.groups = dict(
+                map(lambda _: (_, True), re.split('\s*,\s*', group))
+            )
 
     def connect(self):
         self.bridge = Bridge(self.bridgeAddress)
         self.bridge.connect()
         self.bridge.get_api()
+
+        if hasattr(self, 'groups'):
+            for group in self.bridge.groups:
+                if group.name in self.groups:
+                    if not hasattr(self, 'lightbulbs'):
+                        self.lightbulbs = []
+
+                    self.lightbulbs += list(
+                        map(lambda light: light.name, group.lights)
+                    )
+
+                    print(self.lightbulbs)
 
         if not hasattr(self, 'lightbulbs'):
             self.lightbulbs = []
@@ -48,9 +64,10 @@ class Hue():
         self.bridge.set_light(self.lightbulbs, 'hue', hue)
 
 def showHelp():
-    print "Usage: %s <-b|--bridge> bridge [-l|--lightbulb lighbulb] [--on|--off] [--bri <brightness>] [--sat <saturation>] [--hue <hue>]\n" \
+    print "Usage: %s <-b|--bridge> bridge [-l|--lightbulb lighbulb] [-g|--group group] [--on|--off] [--bri <brightness>] [--sat <saturation>] [--hue <hue>]\n" \
         "  -b|--bridge\tIP address or hostname of the Philips Hue bridge\n" \
         "  -l|--lightbulb\tLightbulbs to toggle, name or index, or comma separated list (default: all)\n" \
+        "  -g|--group\tRoom or group of lights to toggle, name or index, or comma separated list (default: all)\n" \
         "  --on|--off\tSet the lights on or off\n" \
         "  --bri <brightness>\tSet the lights brightness [0-255]\n" \
         "  --sat <saturation>\tSet the lights saturation [0-500]\n" \
@@ -58,13 +75,15 @@ def showHelp():
         % (sys.argv[0])
 
 def initConfig():
-    optlist, args = getopt(sys.argv[1:], 'b:l:', ['bridge=', 'lightbulb=', 'on', 'off', 'bri=', 'hue=', 'sat='])
+    optlist, args = getopt(sys.argv[1:], 'b:l:g:', ['bridge=', 'lightbulb=', 'group=', 'on', 'off', 'bri=', 'hue=', 'sat='])
 
     for opt in optlist:
         if opt[0] == '-b' or opt[0] == '--bridge':
             config['bridge'] = opt[1]
         elif opt[0] == '-l' or opt[0] == '--lightbulb':
             config['lightbulb'] = opt[1]
+        elif opt[0] == '-g' or opt[0] == '--group':
+            config['group'] = opt[1]
         elif opt[0] == '--on':
             config['on'] = True
         elif opt[0] == '--off':
@@ -94,7 +113,9 @@ def initConfig():
 def main():
     initConfig()
 
-    hue = Hue(bridge=config['bridge'], lightbulb = (config['lightbulb'] if 'lightbulb' in config else None))
+    hue = Hue(bridge=config['bridge'],
+              lightbulb = (config['lightbulb'] if 'lightbulb' in config else None),
+              group = (config['group'] if 'group' in config else None))
     hue.connect()
 
     if 'on' in config:
