@@ -20,8 +20,12 @@ class Hue():
 
     def connect(self):
         self.bridge = Bridge(self.bridgeAddress)
-        self.bridge.connect()
-        self.bridge.get_api()
+
+        # uncomment these lines if you're running huectrl for
+        # the first time and you need to pair it to the switch
+
+        # self.bridge.connect()
+        # self.bridge.get_api()
 
         if hasattr(self, 'groups'):
             for group in self.bridge.groups:
