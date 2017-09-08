@@ -42,9 +42,13 @@ class Hue():
         self.bridge.set_light(self.lightbulbs, 'on', on)
 
     def toggle(self):
+        state = False
         for light in self.lightbulbs:
-            state = self.bridge.get_light(light, 'on')
-            self.bridge.set_light(light, 'on', not state)
+            if not self.bridge.get_light(light, 'on'):
+                state = True
+                break
+
+        self.bridge.set_light(self.lightbulbs, 'on', state)
 
     def setBri(self, bri):
         if bri == 0:
