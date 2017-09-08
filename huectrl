@@ -29,11 +29,9 @@ class Hue():
                     if not hasattr(self, 'lightbulbs'):
                         self.lightbulbs = []
 
-                    self.lightbulbs += list(
+                    self.lightbulbs.extend(list(
                         map(lambda light: light.name, group.lights)
-                    )
-
-                    print(self.lightbulbs)
+                    ))
 
         if not hasattr(self, 'lightbulbs'):
             self.lightbulbs = []
@@ -41,20 +39,18 @@ class Hue():
                 self.lightbulbs.append(light.name)
 
     def setOn(self, on):
+        self.bridge.set_light(self.lightbulbs, 'on', on)
+
+    def toggle(self):
         for light in self.lightbulbs:
-            self.bridge.set_light(light, 'on', on)
-            if on:
-                self.bridge.set_light(light, 'bri', 255)
+            state = self.bridge.get_light(light, 'on')
+            self.bridge.set_light(light, 'on', not state)
 
     def setBri(self, bri):
         if bri == 0:
-            for light in self.lightbulbs:
-                self.bridge.set_light(light, 'on', False)
+            self.bridge.set_light(self.lightbulbs, 'on', False)
         else:
-            for light in self.lightbulbs:
-                if not self.bridge.get_light(light, 'on'):
-                    self.bridge.set_light(light, 'on', True)
-
+            self.bridge.set_light(self.lightbulbs, 'on', True)
         self.bridge.set_light(self.lightbulbs, 'bri', bri)
 
     def setSat(self, sat):
@@ -64,18 +60,18 @@ class Hue():
         self.bridge.set_light(self.lightbulbs, 'hue', hue)
 
 def showHelp():
-    print "Usage: %s <-b|--bridge> bridge [-l|--lightbulb lighbulb] [-g|--group group] [--on|--off] [--bri <brightness>] [--sat <saturation>] [--hue <hue>]\n" \
+    print "Usage: %s <-b|--bridge> bridge [-l|--lightbulb lighbulb] [-g|--group group] [--on|--off|--toggle] [--bri <brightness>] [--sat <saturation>] [--hue <hue>]\n" \
         "  -b|--bridge\tIP address or hostname of the Philips Hue bridge\n" \
         "  -l|--lightbulb\tLightbulbs to toggle, name or index, or comma separated list (default: all)\n" \
         "  -g|--group\tRoom or group of lights to toggle, name or index, or comma separated list (default: all)\n" \
-        "  --on|--off\tSet the lights on or off\n" \
+        "  --on|--off|--toggle\tSet the lights on or off, or toggles the state\n" \
         "  --bri <brightness>\tSet the lights brightness [0-255]\n" \
         "  --sat <saturation>\tSet the lights saturation [0-500]\n" \
         "  --hue <hue>\tSet the lights hue [0-65535]\n" \
         % (sys.argv[0])
 
 def initConfig():
-    optlist, args = getopt(sys.argv[1:], 'b:l:g:', ['bridge=', 'lightbulb=', 'group=', 'on', 'off', 'bri=', 'hue=', 'sat='])
+    optlist, args = getopt(sys.argv[1:], 'b:l:g:', ['bridge=', 'lightbulb=', 'group=', 'on', 'off', 'toggle', 'bri=', 'hue=', 'sat='])
 
     for opt in optlist:
         if opt[0] == '-b' or opt[0] == '--bridge':
@@ -84,6 +80,8 @@ def initConfig():
             config['lightbulb'] = opt[1]
         elif opt[0] == '-g' or opt[0] == '--group':
             config['group'] = opt[1]
+        elif opt[0] == '--toggle':
+            config['toggle'] = True
         elif opt[0] == '--on':
             config['on'] = True
         elif opt[0] == '--off':
@@ -103,6 +101,7 @@ def initConfig():
         sys.exit(1)
 
     if \
+            'toggle'  not in config and \
             'on'  not in config and \
             'bri' not in config and \
             'sat' not in config and \
@@ -117,6 +116,10 @@ def main():
               lightbulb = (config['lightbulb'] if 'lightbulb' in config else None),
               group = (config['group'] if 'group' in config else None))
     hue.connect()
+
+    if 'toggle' in config:
+        hue.toggle()
+        return
 
     if 'on' in config:
         hue.setOn(config['on'])
